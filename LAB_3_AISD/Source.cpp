@@ -129,8 +129,8 @@ public:
     bool is_it_has_negative_cycle(const unordered_map<Vertex,Distance>& distances) const {
         for (const auto& v : vertices()) {
             const auto& edges = edges(v);
-            for (auto iter = edges.cbegin(); iter != edges.cend(); ++iter) {
-                const auto& e = *iter;
+            for (auto it = edges.cbegin(); it != edges.cend(); ++it) {
+                const auto& e = *it;
                 if (distances.at(e.from) + e.distance < distances.at(e.to)) {
                     return true;
                 }
