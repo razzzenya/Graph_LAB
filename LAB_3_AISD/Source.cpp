@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <limits>
+#include <functional>
 
 using namespace std;
 template<typename Vertex , typename Distance = double>
@@ -50,6 +51,14 @@ public:
             result.push_back(i.first);
         }
         return result;
+    }
+
+    unique_ptr<vector<Vertex>> vertices_ptr() const {
+        vector<Vertex> res;
+        for (auto& i : _data) {
+            res.push_back(i.first);
+        }
+        return make_unique<vector<Vertex>>(res);
     }
 
     //проверка-добавление-удаление ребер
@@ -116,6 +125,18 @@ public:
             ++it;
         }
         return result;
+    }
+
+    unique_ptr<vector<Edge>> edges_ptr(const Vertex& v) const {
+        if (!has_vertex(v)) throw std::invalid_argument("The graph has no given vertex!");
+        vector<Edge> result;
+        auto& edges = _data.find(v)->second;
+        auto it = edges.begin();
+        while (it != edges.end()) {
+            result.push_back(*it);
+            ++it;
+        }
+        return make_unique<vector<Edge>>(result);
     }
 
     size_t order() const {//порядок
@@ -209,6 +230,22 @@ public:
         return result;
     }
 
+    void walk_(unordered_map<Vertex, bool>& visited, const Vertex& current_vertex, function<void(const Vertex&)> action) {
+        visited[current_vertex] = true;
+        action(current_vertex);
+        for (const auto& edge : _data[current_vertex]) {
+            const auto& next_vertex = edge.to;
+            if (!visited[next_vertex]) {
+                walk_(visited, next_vertex, action);
+            }
+        }
+    }
+
+    void walk(const Vertex& start_vertex, function<void(const Vertex&)> action) {
+        unordered_map<Vertex, bool> visited;
+        walk_(visited, start_vertex, action);
+    }
+
     Distance average_distance(const unordered_map<Vertex, Distance> distances) const {
         Distance sum = 0;
         size_t size = distances.size();
@@ -256,6 +293,11 @@ public:
       
 };
 
+template<typename Vertex>
+void print(const Vertex& vert) {
+    cout << vert << " ";
+}
+
 int main() {
     Graph<size_t, double> d;
     d.add_vertex(4);
@@ -301,7 +343,20 @@ int main() {
         cout << i.from << "->" << i.to << " [distance : " << i.distance << "]" << endl;
     }
 
-    cout << ex.task();
+    cout << ex.task() << endl;;
 
+    ex.walk(1, print<size_t>);
+
+    auto vertices = d.vertices_ptr();
+    for (auto& i : *vertices.get()) {
+        cout << i << " ";
+    }
+    cout << endl;
+
+    auto edges = ex.edges_ptr(1);
+    for (auto& i : *edges.get()) {
+        cout << i.from << "->" << i.to << " ";
+    }
+    cout << endl;
     return 0;
 }
